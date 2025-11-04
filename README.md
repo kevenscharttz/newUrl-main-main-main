@@ -214,6 +214,23 @@ Após iniciar os containers com `sail up -d`:
 2. Banco de dados: acessível via `localhost:3306` (credenciais no .env)
 
 ## Solução de Problemas
+### Resetando o Banco de Dados MySQL (Problemas de Socket/Volume)
+
+Se o container do MySQL não iniciar corretamente em uma nova máquina, ou aparecer erro de socket travado ("Another process with pid ... is using unix socket file"), siga estes passos para resetar o volume do banco:
+
+```bash
+# Pare todos os containers
+./vendor/bin/sail down
+
+# Remova o volume do MySQL (isso apaga todos os dados do banco!)
+docker volume rm newurl-main-main-main_sail-mysql
+
+# Suba novamente os containers
+./vendor/bin/sail up -d
+```
+
+> **Dica:** Se for ambiente de desenvolvimento, pode remover o volume sem problemas. Se precisar manter os dados, faça backup antes.
+
 
 ### Problemas Comuns (Todos os Sistemas)
 
