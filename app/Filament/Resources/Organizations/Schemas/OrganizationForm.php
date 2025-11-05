@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Organizations\Schemas;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
-
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
