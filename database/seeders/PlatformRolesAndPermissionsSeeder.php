@@ -38,8 +38,11 @@ class PlatformRolesAndPermissionsSeeder extends Seeder
         $super = Role::firstOrCreate(['name' => 'super-admin']);
         $super->syncPermissions($allPermissions);
 
-        // Organization manager -> org + dashboard + user management within org
-        $orgPermNames = array_filter($permissions, fn($p) => str_contains($p, ':Organization') || str_contains($p, ':Dashboard') || str_contains($p, ':User'));
+        // Organization manager -> org + dashboard + report + user management within org
+        $orgPermNames = array_filter(
+            $permissions,
+            fn($p) => str_contains($p, ':Organization') || str_contains($p, ':Dashboard') || str_contains($p, ':Report') || str_contains($p, ':User')
+        );
         $org = Role::firstOrCreate(['name' => 'organization-manager']);
         $org->syncPermissions(Permission::whereIn('name', $orgPermNames)->get());
 

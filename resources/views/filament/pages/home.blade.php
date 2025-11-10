@@ -1,52 +1,129 @@
 <x-filament-panels::page>
-    <div class="p-6 space-y-8 rounded-xl shadow-sm max-w-7xl mx-auto dark:bg-gray-950">
-        <!-- Cards de métricas -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="p-8 bg-gray-50 border rounded-xl dark:bg-gray-900 dark:border-gray-800 flex flex-col items-center">
-                <h3 class="text-gray-700 font-semibold mb-2 dark:text-gray-200 text-lg">Dashboards Ativos</h3>
-                <p class="text-4xl font-extrabold text-gray-900 dark:text-blue-300">{{ $dashboardsCount }}</p>
-                <!-- Porcentagem removida -->
-            </div>
-            <div class="p-8 bg-gray-50 border rounded-xl dark:bg-gray-900 dark:border-gray-800 flex flex-col items-center">
-                <h3 class="text-gray-700 font-semibold mb-2 dark:text-gray-200 text-lg">Usuários Ativos</h3>
-                <p class="text-4xl font-extrabold text-gray-900 dark:text-blue-300">{{ $usersCount }}</p>
-                <!-- Porcentagem removida -->
-            </div>
-            <div class="p-8 bg-gray-50 border rounded-xl dark:bg-gray-900 dark:border-gray-800 flex flex-col items-center">
-                <h3 class="text-gray-700 font-semibold mb-2 dark:text-gray-200 text-lg">Organizações</h3>
-                <p class="text-4xl font-extrabold text-gray-900 dark:text-blue-300">{{ $organizationsCount }}</p>
-                <!-- Porcentagem removida -->
-            </div>
-        </div>
-        <!-- Dashboards Recentes -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="p-5 bg-gray-50 border rounded-lg dark:bg-gray-900 dark:border-gray-800 w-full mt-6 lg:col-span-2">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-blue-200">Dashboards Recentes</h2>
-                    <a href="{{ \App\Filament\Resources\Dashboards\DashboardResource::getUrl('index') }}" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Ver Todos</a>
+    <div class="space-y-8 px-4 xl:px-6"> <!-- removed max-w constraint for full-width layout -->
+        <!-- Header de boas-vindas + CTA -->
+        <div class="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 text-white p-6 md:p-8 shadow-sm dark:from-slate-800 dark:to-slate-700">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">Bem-vindo(a) ao Observatório de Dados</h1>
+                    <p class="mt-1 text-slate-300">Centralize dashboards, relatórios e organizações em um só lugar.</p>
                 </div>
-                <ul class="space-y-3 w-full">
-                    @foreach($recentDashboards as $d)
-                        <li class="flex items-center justify-between p-3 bg-white rounded-md shadow-sm dark:bg-gray-800">
-                            <div>
-                                <p class="font-medium text-gray-800 dark:text-blue-100">{{ $d->title }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ $d->organization?->name }}</p>
-                            </div>
-                            <span class="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded-full dark:bg-blue-950 dark:text-blue-300">{{ $d->views ?? '0' }} views</span>
-                        </li>
-                    @endforeach
-                </ul>
+                <div class="flex gap-3">
+                    @if($canCreateDashboard)
+                    <a href="{{ \App\Filament\Resources\Dashboards\DashboardResource::getUrl('create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-slate-900 font-medium hover:bg-slate-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H7a1 1 0 110-2h4V7a1 1 0 011-1z"/></svg>
+                        Novo Dashboard
+                    </a>
+                    @endif
+                    @if($canCreateReport)
+                    <a href="{{ \App\Filament\Resources\Reports\ReportResource::getUrl('create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-white/30 text-white hover:bg-white/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/><path d="M14 3v4a1 1 0 001 1h4"/></svg>
+                        Novo Relatório
+                    </a>
+                    @endif
+                </div>
             </div>
         </div>
-        <!-- Ações Rápidas -->
-        <div class="p-5 bg-gray-50 border rounded-lg dark:bg-gray-900 dark:border-gray-800">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-blue-200 mb-3">Ações Rápidas</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Comece a trabalhar com dados rapidamente</p>
-            <div class="flex flex-wrap gap-4 mt-4">
-                <a href="{{ \App\Filament\Resources\Dashboards\DashboardResource::getUrl('index') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow hover:bg-blue-700 transition dark:bg-blue-700 dark:hover:bg-blue-800">Ver Dashboards</a>
-                <a href="{{ \App\Filament\Resources\Reports\ReportResource::getUrl('index') }}" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium shadow hover:bg-green-700 transition dark:bg-green-700 dark:hover:bg-green-800">Ver Relatórios</a>
-                <a href="{{ \App\Filament\Resources\Organizations\OrganizationResource::getUrl('index') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium shadow hover:bg-purple-700 transition dark:bg-purple-700 dark:hover:bg-purple-800">Ver Organizações</a>
-                <a href="{{ \App\Filament\Resources\Users\UserResource::getUrl('index') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium shadow hover:bg-gray-700 transition dark:bg-gray-700 dark:hover:bg-gray-800">Ver Usuários</a>
+
+        <!-- Métricas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            @php($metricClasses = 'rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm')
+            <div class="{{ $metricClasses }}">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-slate-500">Dashboards</div>
+                    <div class="h-9 w-9 rounded-lg bg-blue-600/10 text-blue-600 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zM13 21h8v-10h-8v10zM13 3v6h8V3h-8z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-3xl font-semibold">{{ $dashboardsCount }}</div>
+            </div>
+            <div class="{{ $metricClasses }}">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-slate-500">Relatórios</div>
+                    <div class="h-9 w-9 rounded-lg bg-emerald-600/10 text-emerald-600 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-3xl font-semibold">{{ $reportsCount ?? 0 }}</div>
+            </div>
+            <div class="{{ $metricClasses }}">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-slate-500">Usuários</div>
+                    <div class="h-9 w-9 rounded-lg bg-violet-600/10 text-violet-600 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10z"/><path d="M2 20a10 10 0 1120 0v1H2v-1z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-3xl font-semibold">{{ $usersCount }}</div>
+            </div>
+            <div class="{{ $metricClasses }}">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-slate-500">Organizações</div>
+                    <div class="h-9 w-9 rounded-lg bg-amber-600/10 text-amber-600 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21V3h8v6h10v12H3zm10-2h6V11h-6v8zM5 19h4V5H5v14z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-2 text-3xl font-semibold">{{ $organizationsCount }}</div>
+            </div>
+        </div>
+
+        <!-- Conteúdo em 2 colunas: recentes e ações rápidas -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold">Dashboards recentes</h2>
+                    <a href="{{ \App\Filament\Resources\Dashboards\DashboardResource::getUrl('index') }}" class="text-sm text-blue-600 hover:underline">Ver todos</a>
+                </div>
+                @if($recentDashboards->isEmpty())
+                    <div class="text-sm text-slate-500">Nenhum dashboard recente.</div>
+                @else
+                    <ul class="divide-y divide-slate-200 dark:divide-slate-800">
+                        @foreach($recentDashboards as $d)
+                            <li class="py-3 flex items-center justify-between">
+                                <div>
+                                    <div class="font-medium">{{ $d->title }}</div>
+                                    <div class="text-xs text-slate-500">{{ $d->organization?->name }} • {{ $d->created_at->diffForHumans() }}</div>
+                                </div>
+                                <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{ $d->views ?? '0' }} views</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+            <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+                <h2 class="text-lg font-semibold">Ações rápidas</h2>
+                <div class="mt-4 grid grid-cols-1 gap-3">
+                    @if($canCreateDashboard)
+                    <a href="{{ \App\Filament\Resources\Dashboards\DashboardResource::getUrl('create') }}" class="inline-flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <span class="h-8 w-8 rounded-md bg-blue-600/10 text-blue-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H7a1 1 0 110-2h4V7a1 1 0 011-1z"/></svg>
+                        </span>
+                        <span class="font-medium">Criar dashboard</span>
+                    </a>
+                    @endif
+                    @if($canCreateReport)
+                    <a href="{{ \App\Filament\Resources\Reports\ReportResource::getUrl('create') }}" class="inline-flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <span class="h-8 w-8 rounded-md bg-emerald-600/10 text-emerald-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/></svg>
+                        </span>
+                        <span class="font-medium">Criar relatório</span>
+                    </a>
+                    @endif
+                    @if($canCreateOrganization)
+                    <a href="{{ \App\Filament\Resources\Organizations\OrganizationResource::getUrl('create') }}" class="inline-flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <span class="h-8 w-8 rounded-md bg-amber-600/10 text-amber-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21V3h8v6h10v12H3zm10-2h6V11h-6v8zM5 19h4V5H5v14z"/></svg>
+                        </span>
+                        <span class="font-medium">Criar organização</span>
+                    </a>
+                    @endif
+                    @if($canManageUsers)
+                    <a href="{{ \App\Filament\Resources\Users\UserResource::getUrl('index') }}" class="inline-flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <span class="h-8 w-8 rounded-md bg-violet-600/10 text-violet-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10z"/><path d="M2 20a10 10 0 1120 0v1H2v-1z"/></svg>
+                        </span>
+                        <span class="font-medium">Gerenciar usuários</span>
+                    </a>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

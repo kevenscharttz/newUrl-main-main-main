@@ -26,6 +26,13 @@ class HomePage extends Page
         $organizationsLastMonth = \App\Models\Organization::where('created_at', '<', $lastMonth)->count();
         $organizationsPercent = $organizationsLastMonth ? round((($organizationsCount - $organizationsLastMonth) / $organizationsLastMonth) * 100, 1) : 0;
         $recentDashboards = \App\Models\Dashboard::latest()->limit(3)->get();
+        $reportsCount = \App\Models\Report::count();
+        $recentReports = \App\Models\Report::latest()->limit(3)->get();
+    $user = auth()->user();
+    $canCreateDashboard = $user?->can('create', \App\Models\Dashboard::class) ?? false;
+    $canCreateReport = $user?->can('create', \App\Models\Report::class) ?? false;
+    $canManageUsers = $user?->can('viewAny', \App\Models\User::class) ?? false;
+    $canCreateOrganization = $user?->can('create', \App\Models\Organization::class) ?? false;
         return [
             'dashboardsCount' => $dashboardsCount,
             'dashboardsPercent' => $dashboardsPercent,
@@ -34,6 +41,12 @@ class HomePage extends Page
             'organizationsCount' => $organizationsCount,
             'organizationsPercent' => $organizationsPercent,
             'recentDashboards' => $recentDashboards,
+            'reportsCount' => $reportsCount,
+            'recentReports' => $recentReports,
+            'canCreateDashboard' => $canCreateDashboard,
+            'canCreateReport' => $canCreateReport,
+            'canManageUsers' => $canManageUsers,
+            'canCreateOrganization' => $canCreateOrganization,
         ];
     }
 }

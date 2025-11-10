@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Support\Logos;
 
 class Organization extends Model
 {
@@ -24,6 +25,24 @@ class Organization extends Model
     protected $casts = [
         'logo_settings' => 'array',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updating(function (Organization $org) {
+            if ($org->isDirty('logo_url')) {
+                $original = $org->getOriginal('logo_url');
+                if ($original && $original !== $org->logo_url) {
+                    Logos::deleteIfExists($original);
+                }
+            }
+        });
+
+        static::deleting(function (Organization $org) {
+            Logos::deleteIfExists($org->logo_url);
+        });
+    }
 
     // 🔗 Relacionamentos
     public function users()

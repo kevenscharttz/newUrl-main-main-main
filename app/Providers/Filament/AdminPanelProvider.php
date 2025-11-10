@@ -30,6 +30,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            // Expand content area to full width (user request): can rollback by removing maxContentWidth()
+            ->maxContentWidth('full')
             ->colors([
                 'primary' => [
                     50 => '#eef7ff',

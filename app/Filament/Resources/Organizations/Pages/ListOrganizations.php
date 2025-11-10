@@ -25,9 +25,12 @@ class ListOrganizations extends ListRecords
         if (! $user) {
             return Organization::query()->whereRaw('0=1');
         }
-        // Restringe a listagem às organizações do usuário
+        // Restringe a listagem às organizações do usuário + eager loading & counts
         $orgIds = $user->organizations()->pluck('organizations.id')->toArray();
-        return Organization::query()->whereIn('id', $orgIds);
+        return Organization::query()
+            ->whereIn('id', $orgIds)
+            ->with(['creator'])
+            ->withCount(['users', 'dashboards', 'reports']);
     }
 
     protected function getTableExtraAttributes(): array

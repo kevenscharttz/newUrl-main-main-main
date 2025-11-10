@@ -422,3 +422,9 @@
 .dark .dashboard-card-section {
   border-top: 1px solid #232a3a;
 }
+
+/* Layout spacing adjustments (full-width request) */
+.fi-layout { gap: 0.75rem; }
+.fi-main { padding-left: 0.5rem; padding-right: 0.5rem; }
+@media (min-width: 1280px) { .fi-main { padding-left: 1rem; padding-right: 1rem; } }
+.fi-page { max-width: 100%; }

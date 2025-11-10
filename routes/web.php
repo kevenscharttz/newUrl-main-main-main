@@ -18,5 +18,6 @@ Route::get('/', function () {
     if (Auth::check()) {
         return redirect('/home');
     }
-    return redirect('/login');
+    // Página inicial pública (landing)
+    return view('landing');
 });

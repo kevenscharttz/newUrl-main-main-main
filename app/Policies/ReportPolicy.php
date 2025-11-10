@@ -45,7 +45,8 @@ class ReportPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasAnyRole(['super-admin', 'organization-manager', 'user']);
+        // Apenas super-admin (capturado pelo Gate::before) e organization-manager podem criar
+        return $user->hasRole('organization-manager');
     }
 
     /**

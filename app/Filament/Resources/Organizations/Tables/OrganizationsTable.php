@@ -7,7 +7,9 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 
 class OrganizationsTable
 {
@@ -15,6 +17,13 @@ class OrganizationsTable
     {
         return $table
             ->columns([
+                ImageColumn::make('logo_url')
+                    ->label('Logo')
+                    ->disk('public')
+                    ->square()
+                    ->defaultImageUrl(asset('images/default-organization-logo.svg'))
+                    ->getStateUsing(fn ($record) => ($record->logo_url && Storage::disk('public')->exists($record->logo_url)) ? $record->logo_url : null),
+
                 TextColumn::make('name')
                     ->label('Nome')
                     ->searchable()
