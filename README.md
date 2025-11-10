@@ -336,3 +336,40 @@ O projeto usa Laravel Sail, que fornece:
 - MySQL 8.0
 - Node.js para assets
 - Redis (opcional)
+
+## Upload de Imagens / Logos
+
+Se ao enviar uma imagem ela não carregar no painel, verifique:
+
+1. Se existe o symlink `public/storage`. Dentro da pasta `public` deve aparecer uma pasta `storage`. Caso não exista:
+   ```bash
+   ./vendor/bin/sail artisan storage:link
+   ```
+2. A variável `APP_URL` no `.env` deve apontar para a URL acessível do container. Em ambiente local normalmente:
+   ```ini
+   APP_URL=http://localhost
+   ```
+3. Permissões da pasta `storage/app/public` (no host) precisam permitir escrita pelo usuário do container (WWWUSER). Você pode ajustar:
+   ```bash
+   sudo chown -R $USER:$USER storage/ bootstrap/cache
+   ```
+4. Após ajustes limpe caches:
+   ```bash
+   ./vendor/bin/sail artisan config:clear
+   ./vendor/bin/sail artisan cache:clear
+   ```
+
+### Caminho dos Arquivos
+O componente de upload salva os logos em: `storage/app/public/organizations/logos/`. A URL pública gerada será: `APP_URL/storage/organizations/logos/<arquivo>`.
+
+### Criação Automática do Symlink
+Para facilitar o desenvolvimento, o `AppServiceProvider` cria automaticamente o link quando em ambiente `local` se ele não existir. Em produção recomenda-se executar manualmente:
+```bash
+php artisan storage:link
+``` 
+
+### Dicas Extras
+- Se precisar manter o nome original, já existe o campo `logo_filename` salvo; você pode exibir esse nome em telas futuras.
+- Para prevenir conflitos de cache de imagens após substituição, considere adicionar query string de versão ao exibir (`?v=<updated_at_timestamp>`).
+- Para suporte a CDN/S3 basta configurar o disk `s3` e trocar `->disk('public')` para `->disk('s3')` no formulário.
+
