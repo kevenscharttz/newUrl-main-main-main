@@ -22,6 +22,10 @@ class ReportResource extends Resource
 {
     protected static ?string $model = Report::class;
 
+    protected static ?string $navigationLabel = 'Relatórios';
+    protected static ?string $modelLabel = 'relatório';
+    protected static ?string $pluralModelLabel = 'Relatórios';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::DocumentText;
     protected static string|\UnitEnum|null $navigationGroup = 'Dados';
     protected static ?int $navigationSort = 3;

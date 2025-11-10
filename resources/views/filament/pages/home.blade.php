@@ -82,7 +82,7 @@
                                     <div class="font-medium">{{ $d->title }}</div>
                                     <div class="text-xs text-slate-500">{{ $d->organization?->name }} • {{ $d->created_at->diffForHumans() }}</div>
                                 </div>
-                                <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{ $d->views ?? '0' }} views</span>
+                                <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{ $d->views ?? '0' }} visualizações</span>
                             </li>
                         @endforeach
                     </ul>

@@ -22,6 +22,10 @@ class DashboardResource extends Resource
 {
     protected static ?string $model = Dashboard::class;
 
+    protected static ?string $navigationLabel = 'Dashboards';
+    protected static ?string $modelLabel = 'dashboard';
+    protected static ?string $pluralModelLabel = 'Dashboards';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ChartBarSquare;
     protected static string|\UnitEnum|null $navigationGroup = 'Dados';
     protected static ?int $navigationSort = 2;
