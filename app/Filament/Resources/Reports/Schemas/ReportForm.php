@@ -8,7 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
-use Filament\Forms\Get;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use App\Models\Organization;
 use App\Models\Report;
@@ -128,10 +128,35 @@ class ReportForm
                         'private' => 'Privado - Visível apenas para usuários autorizados',
                     ])
                     ->required()
+                    ->live()
                     ->inline()
                     ->validationMessages([
                         'required' => 'A visibilidade é obrigatória.'
                     ]),
+
+                Select::make('viewers')
+                    ->label('Quem pode visualizar (privado)')
+                    ->helperText('Selecione os membros da organização que poderão visualizar este relatório quando privado')
+                    ->multiple()
+                    ->preload()
+                    ->searchable()
+                    ->visible(fn (Get $get) => $get('visibility') === 'private')
+                    ->dehydrated(fn (Get $get) => $get('visibility') === 'private')
+                    ->relationship(
+                        name: 'viewers',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function ($query, Get $get) {
+                            $orgId = $get('organization_id');
+                            if ($orgId) {
+                                $query->whereHas('organizations', function ($q) use ($orgId) {
+                                    $q->where('organizations.id', $orgId);
+                                });
+                            } else {
+                                // Sem organização escolhida, não lista usuários
+                                $query->whereRaw('0 = 1');
+                            }
+                        }
+                    ),
 
                 Placeholder::make('multiple_reports_info')
                     ->label('')

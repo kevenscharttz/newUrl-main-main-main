@@ -96,9 +96,14 @@ class OrganizationForm
                 Select::make('users')
                     ->label('Usuários Associados')
                     ->helperText('Você será automaticamente associado à organização. Selecione outros usuários se necessário.')
-                    ->relationship('users', 'name')
+                    ->relationship(
+                        name: 'users',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn ($query) => $query->orderBy('name')
+                    )
                     ->multiple()
                     ->preload()
+                    ->optionsLimit(1000)
                     ->searchable()
                     ->default(function () {
                         $user = Auth::user();

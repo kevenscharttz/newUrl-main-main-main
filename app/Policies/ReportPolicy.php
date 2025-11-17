@@ -27,17 +27,28 @@ class ReportPolicy
     public function view(User $user, Report $report): bool
     {
         // Super-admin pode ver tudo
-        if ($user->hasRole('super-admin')) {
+        if (method_exists($user, 'hasRole') && ($user->hasRole('super-admin') || $user->hasRole('super_admin'))) {
             return true;
         }
 
-        // Organization-manager pode ver relatórios da sua organização
-        if ($user->hasRole('organization-manager')) {
-            return $user->organizations()->where('organizations.id', $report->organization_id)->exists();
+        // O relatório precisa pertencer a uma das organizações do usuário
+        $belongsToOrg = $user->organizations()->where('organizations.id', $report->organization_id)->exists();
+        if (! $belongsToOrg) {
+            return false;
         }
 
-        // Usuários podem ver relatórios das organizações que pertencem
-        return $user->organizations()->where('organizations.id', $report->organization_id)->exists();
+        // Managers da organização podem ver todos os relatórios da organização
+        if (method_exists($user, 'hasRole') && $user->hasRole('organization-manager')) {
+            return true;
+        }
+
+        // Públicos: qualquer membro da organização pode ver
+        if ($report->visibility === 'public') {
+            return true;
+        }
+
+        // Privados: apenas usuários selecionados como viewers
+        return $report->viewers()->where('users.id', $user->id)->exists();
     }
 
     /**

@@ -77,12 +77,8 @@ class DashboardResource extends Resource
             return false;
         }
 
-        // If user has the global viewAny permission, let Filament decide
-        if (static::canViewAny()) {
-            return true;
-        }
-
-        // Otherwise, show the nav if there exists at least one dashboard visible to this user
-        return Dashboard::visibleTo($user)->exists();
+        // Mostrar o item de navegação para qualquer usuário autenticado;
+        // a listagem em si será filtrada por scope/policy e pode ficar vazia.
+        return true;
     }
 }

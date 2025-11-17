@@ -59,8 +59,8 @@ class ReportResource extends Resource
             return $query;
         }
 
-        // Super-admin vê tudo
-        if ($user->hasRole('super-admin')) {
+        // Super-admin vê tudo (aceitar hífen e underscore)
+        if ($user->hasRole('super-admin') || $user->hasRole('super_admin')) {
             return $query;
         }
 
@@ -96,5 +96,21 @@ class ReportResource extends Resource
 
         // Todos os usuários autenticados podem acessar relatórios
         return true;
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = Filament::auth()?->user() ?? request()->user() ?? Auth::user();
+        if (! $user) {
+            return false;
+        }
+
+        // Super-admin sempre pode criar (aceitar hífen e underscore)
+        if (method_exists($user, 'hasRole') && ($user->hasRole('super-admin') || $user->hasRole('super_admin'))) {
+            return true;
+        }
+
+        // Apenas managers; super-admin já cobre acima
+        return method_exists($user, 'hasRole') && $user->hasRole('organization-manager');
     }
 }

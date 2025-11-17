@@ -39,6 +39,14 @@ class Report extends Model
     }
 
     /**
+     * Usuários que podem ver este relatório quando ele é privado.
+     */
+    public function viewers()
+    {
+        return $this->belongsToMany(User::class, 'report_user');
+    }
+
+    /**
      * Scope reports visible to a given user.
      * Usage: Report::visibleTo($user)->get();
      */
@@ -50,24 +58,31 @@ class Report extends Model
         }
 
         // Super-admins veem tudo
-        $isSuper = false;
-        if (method_exists($user, 'getRoleNames')) {
-            $roles = $user->getRoleNames()->toArray();
-            foreach ($roles as $r) {
-                $normalized = strtolower(preg_replace('/[^a-z0-9]/', '', $r));
-                if (in_array($normalized, ['superadmin', 'super'], true)) {
-                    $isSuper = true;
-                    break;
-                }
-            }
-        }
-
-        if ($isSuper) {
+        if (method_exists($user, 'hasRole') && ($user->hasRole('super-admin') || $user->hasRole('super_admin'))) {
             return $query;
         }
 
         $organizationIds = $user->organizations()->pluck('organizations.id')->toArray();
-        // Apenas relatórios da(s) organização(ões) do usuário
-        return $query->whereIn('organization_id', $organizationIds);
+        // Managers podem ver todos os relatórios (públicos e privados) da(s) sua(s) organização(ões)
+        $isManager = method_exists($user, 'hasRole') && $user->hasRole('organization-manager');
+
+        if ($isManager) {
+            return $query->whereIn('organization_id', $organizationIds);
+        }
+
+        // Outros usuários:
+        // - ver públicos da(s) sua(s) organização(ões)
+        // - ver privados apenas quando estiverem na lista de viewers
+        return $query
+            ->whereIn('organization_id', $organizationIds)
+            ->where(function ($q) use ($user) {
+                $q->where('visibility', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('visibility', 'private')
+                         ->whereHas('viewers', function ($vv) use ($user) {
+                             $vv->where('users.id', $user->id);
+                         });
+                  });
+            });
     }
 }

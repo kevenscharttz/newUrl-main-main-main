@@ -24,6 +24,34 @@ class User extends Authenticatable
         'password',
     ];
 
+        protected static function boot()
+        {
+            parent::boot();
+
+            // Impedir que não-super-admin atribua role super-admin indevidamente
+            static::saving(function (User $user) {
+                $actor = auth()->user();
+                if ($actor && method_exists($actor, 'hasRole') && ! $actor->hasRole('super-admin')) {
+                    // Se o usuário já existe e tentarem sincronizar a role super-admin via formulário/relationship
+                    if ($user->exists) {
+                        // Remover pending super-admin do relation atribuído (post-save sincroniza via Filament)
+                        // Não temos acesso direto às roles selecionadas antes do sync aqui, então após salvar garantimos a limpeza abaixo.
+                    }
+                }
+            });
+
+            static::saved(function (User $user) {
+                $actor = auth()->user();
+                if ($actor && method_exists($actor, 'hasRole') && ! $actor->hasRole('super-admin')) {
+                    // Se por algum motivo a role super-admin foi atribuída, removê-la
+                    if (method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {
+                        $user->removeRole('super-admin');
+                    }
+                }
+            });
+
+        }
+
     /**
      * The attributes that should be hidden for serialization.
      *

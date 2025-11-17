@@ -19,7 +19,7 @@ class DockerSuperAdminSeeder extends Seeder
     public function run(): void
     {
         $email = env('DOCKER_ADMIN_EMAIL', 'admin@localhost');
-        $password = env('DOCKER_ADMIN_PASSWORD', 'secret');
+    $password = env('DOCKER_ADMIN_PASSWORD', 'password');
 
         $user = User::where('email', $email)->first();
 

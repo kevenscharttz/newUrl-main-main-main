@@ -30,7 +30,7 @@ class HomePage extends Page
         $recentReports = \App\Models\Report::latest()->limit(3)->get();
     $user = auth()->user();
     $canCreateDashboard = $user?->can('create', \App\Models\Dashboard::class) ?? false;
-    $canCreateReport = $user?->can('create', \App\Models\Report::class) ?? false;
+    $canCreateReport = \App\Filament\Resources\Reports\ReportResource::canCreate();
     $canManageUsers = $user?->can('viewAny', \App\Models\User::class) ?? false;
     $canCreateOrganization = $user?->can('create', \App\Models\Organization::class) ?? false;
         return [

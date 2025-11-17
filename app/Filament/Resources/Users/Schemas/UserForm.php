@@ -7,6 +7,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Auth;
 
 class UserForm
 {
@@ -33,12 +34,41 @@ class UserForm
                     ->maxLength(100)
                     ->dehydrateStateUsing(fn($state) => filled($state) ? bcrypt($state) : null)
                     ->required(fn($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord),
-                Select::make('roles')
-                    ->label('Funções')
-                    ->multiple()
-                    ->relationship('roles', 'name')
+                Select::make('role')
+                    ->label('Função')
+                    ->options(function () {
+                        $current = Auth::user();
+                        $all = Role::query()->pluck('name', 'id')->toArray();
+                        if ($current && method_exists($current, 'hasRole') && $current->hasRole('super-admin')) {
+                            return $all;
+                        }
+                        return collect($all)->reject(fn($name) => $name === 'super-admin')->toArray();
+                    })
+                    ->searchable()
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->afterStateUpdated(function ($state, $livewire) {
+                        // No immediate action; syncing happens on save
+                    })
+                    ->dehydrateStateUsing(fn($state) => $state)
+                    ->saveRelationshipsUsing(function ($component, $record, $state) {
+                        // Substitui todas as roles pelo valor único escolhido
+                        if ($state) {
+                            $role = Role::find($state);
+                            if ($role) {
+                                // Guarda referência ao ator
+                                $actor = Auth::user();
+                                if ($role->name === 'super-admin' && (! $actor || ! $actor->hasRole('super-admin'))) {
+                                    // Ignora tentativa indevida
+                                    return;
+                                }
+                                $record->syncRoles([$role->name]);
+                            }
+                        } else {
+                            // Se nada selecionado, remove todas (mantendo proteção de super-admin via Policy)
+                            $record->syncRoles([]);
+                        }
+                    }),
             ]);
     }
 }

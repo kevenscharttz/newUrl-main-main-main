@@ -31,12 +31,23 @@ class DashboardPolicy
         // Só pode ver se o dashboard pertence a uma das organizações do usuário
         if ($dashboard->organization_id) {
             $orgIds = $authUser->organizations()->pluck('organizations.id')->toArray();
-            if (in_array($dashboard->organization_id, $orgIds, true)) {
-                return true;
+            if (! in_array($dashboard->organization_id, $orgIds, true)) {
+                return false;
             }
         }
 
-        return false;
+        // Managers da organização podem ver todos os dashboards da organização
+        if (method_exists($authUser, 'hasRole') && $authUser->hasRole('organization-manager')) {
+            return true;
+        }
+
+        // Públicos: qualquer membro da organização pode ver
+        if ($dashboard->visibility === 'public') {
+            return true;
+        }
+
+        // Privados: apenas usuários selecionados como viewers
+        return $dashboard->viewers()->where('users.id', $authUser->id)->exists();
     }
 
     public function create(AuthUser $authUser): bool

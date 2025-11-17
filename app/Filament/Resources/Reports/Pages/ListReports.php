@@ -7,6 +7,7 @@ use App\Models\Report;
 use App\Models\User;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Actions\CreateAction;
+use Illuminate\Support\Facades\Auth;
 
 class ListReports extends ListRecords
 {
@@ -22,29 +23,15 @@ class ListReports extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Novo Relatório')
+                ->visible(fn () => \App\Filament\Resources\Reports\ReportResource::canCreate()),
         ];
     }
 
-    public static function getEloquentQuery()
+    protected function getTableQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $query = parent::getEloquentQuery();
-        $user = \Filament\Facades\Filament::auth()?->user();
-        
-        if ($user instanceof User) {
-            // Normalize super-admin role name checks
-            $isSuper = $user->hasRole('super-admin') || $user->hasRole('super_admin');
-
-            // Super-admin pode ver todos os relatórios
-            if ($isSuper) {
-                return $query;
-            }
-
-            // Organization-manager e usuários só veem relatórios da sua organização
-            $orgIds = $user->organizations()->pluck('id');
-            $query = $query->whereIn('organization_id', $orgIds);
-        }
-        
-        return $query;
+        $user = Auth::user();
+        return Report::query()->visibleTo($user);
     }
 }

@@ -25,6 +25,13 @@ class ListOrganizations extends ListRecords
         if (! $user) {
             return Organization::query()->whereRaw('0=1');
         }
+        // Super-admin vê todas as organizações
+        if (method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {
+            return Organization::query()
+                ->with(['creator'])
+                ->withCount(['users', 'dashboards', 'reports']);
+        }
+
         // Restringe a listagem às organizações do usuário + eager loading & counts
         $orgIds = $user->organizations()->pluck('organizations.id')->toArray();
         return Organization::query()
