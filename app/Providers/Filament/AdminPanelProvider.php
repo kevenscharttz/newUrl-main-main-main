@@ -27,8 +27,8 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('admin')
-            ->path('admin')
+            ->id('home')
+            ->path('home')
             ->login()
             // Expand content area to full width (user request): can rollback by removing maxContentWidth()
             ->maxContentWidth('full')
