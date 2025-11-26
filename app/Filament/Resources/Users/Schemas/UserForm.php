@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Schemas;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
+use App\Models\Organization;
 use Filament\Schemas\Schema;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
@@ -48,27 +49,62 @@ class UserForm
                     ->preload()
                     ->required()
                     ->afterStateUpdated(function ($state, $livewire) {
-                        // No immediate action; syncing happens on save
                     })
                     ->dehydrateStateUsing(fn($state) => $state)
                     ->saveRelationshipsUsing(function ($component, $record, $state) {
-                        // Substitui todas as roles pelo valor único escolhido
                         if ($state) {
                             $role = Role::find($state);
                             if ($role) {
-                                // Guarda referência ao ator
                                 $actor = Auth::user();
                                 if ($role->name === 'super-admin' && (! $actor || ! $actor->hasRole('super-admin'))) {
-                                    // Ignora tentativa indevida
                                     return;
                                 }
                                 $record->syncRoles([$role->name]);
                             }
                         } else {
-                            // Se nada selecionado, remove todas (mantendo proteção de super-admin via Policy)
                             $record->syncRoles([]);
                         }
                     }),
+
+                Select::make('organizations')
+                    ->label('Organizações')
+                    ->helperText('Selecione as organizações às quais o usuário pertence')
+                    ->multiple()
+                    ->preload()
+                    ->searchable()
+                    ->relationship(
+                        name: 'organizations',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function ($query) {
+                            $current = Auth::user();
+                            if (! $current) {
+                                return $query->whereRaw('0=1');
+                            }
+                            if (method_exists($current, 'hasRole') && $current->hasRole('super-admin')) {
+                                return $query;
+                            }
+                            if (method_exists($current, 'hasRole') && $current->hasRole('organization-manager')) {
+                                $orgIds = $current->organizations()->pluck('organizations.id');
+                                return $query->whereIn('organizations.id', $orgIds);
+                            }
+                            $orgIds = $current->organizations()->pluck('organizations.id');
+                            return $query->whereIn('organizations.id', $orgIds);
+                        }
+                    )
+                    ->default(function () {
+                        $current = Auth::user();
+                        if (! $current) {
+                            return [];
+                        }
+                        if (method_exists($current, 'hasRole') && $current->hasRole('organization-manager')) {
+                            $orgIds = $current->organizations()->pluck('organizations.id');
+                            if ($orgIds->count() === 1) {
+                                return [$orgIds->first()];
+                            }
+                        }
+                        return [];
+                    })
+                    ->required(fn() => Auth::user()?->hasRole('organization-manager')),
             ]);
     }
 }

@@ -27,8 +27,9 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('home')
-            ->path('home')
+            // Alterado para 'painel' para evitar URL duplicada /home/home
+            ->id('painel')
+            ->path('painel')
             ->login()
             // Expand content area to full width (user request): can rollback by removing maxContentWidth()
             ->maxContentWidth('full')
