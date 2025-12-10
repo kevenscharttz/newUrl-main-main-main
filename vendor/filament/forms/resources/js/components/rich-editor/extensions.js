@@ -40,11 +40,13 @@ import getMergeTagSuggestion from './merge-tag-suggestion.js'
 export default async ({
     acceptedFileTypes,
     acceptedFileTypesValidationMessage,
+    canAttachFiles,
     customExtensionUrls,
     deleteCustomBlockButtonIconHtml,
     editCustomBlockButtonIconHtml,
     editCustomBlockUsing,
     insertCustomBlockUsing,
+    linkProtocols,
     key,
     maxFileSize,
     maxFileSizeValidationMessage,
@@ -88,18 +90,24 @@ export default async ({
         Link.configure({
             autolink: true,
             openOnClick: false,
+            protocols: linkProtocols,
         }),
         ListItem,
-        LocalFiles.configure({
-            acceptedTypes: acceptedFileTypes,
-            acceptedTypesValidationMessage: acceptedFileTypesValidationMessage,
-            get$WireUsing: () => $wire,
-            key,
-            maxSize: maxFileSize,
-            maxSizeValidationMessage: maxFileSizeValidationMessage,
-            statePath,
-            uploadingMessage: uploadingFileMessage,
-        }),
+        ...(canAttachFiles
+            ? [
+                  LocalFiles.configure({
+                      acceptedTypes: acceptedFileTypes,
+                      acceptedTypesValidationMessage:
+                          acceptedFileTypesValidationMessage,
+                      get$WireUsing: () => $wire,
+                      key,
+                      maxSize: maxFileSize,
+                      maxSizeValidationMessage: maxFileSizeValidationMessage,
+                      statePath,
+                      uploadingMessage: uploadingFileMessage,
+                  }),
+              ]
+            : []),
         ...(Object.keys(mergeTags).length
             ? [
                   MergeTag.configure({
@@ -164,7 +172,7 @@ export default async ({
         }),
     )
 
-    for (const customExtension of loadedCustomExtensions) {
+    for (let customExtension of loadedCustomExtensions) {
         if (!customExtension || !customExtension.name) {
             continue
         }
@@ -172,6 +180,13 @@ export default async ({
         const existingIndex = extensions.findIndex(
             (extension) => extension.name === customExtension.name,
         )
+
+        if (
+            customExtension.name === 'placeholder' &&
+            customExtension.parent === null
+        ) {
+            customExtension = Placeholder.configure(customExtension.options)
+        }
 
         if (existingIndex !== -1) {
             extensions[existingIndex] = customExtension

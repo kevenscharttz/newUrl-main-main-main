@@ -1,4 +1,5 @@
 import { computePosition, flip, shift, offset } from '@floating-ui/dom'
+import Sortable from 'sortablejs'
 
 // Helper function to check if a value is null, undefined, or an empty string
 function blank(value) {
@@ -30,6 +31,7 @@ export class Select {
         isAutofocused = false,
         isDisabled = false,
         isMultiple = false,
+        isReorderable = false,
         isSearchable = false,
         getOptionLabelUsing = null,
         getOptionLabelsUsing = null,
@@ -65,6 +67,7 @@ export class Select {
         this.isAutofocused = isAutofocused
         this.isDisabled = isDisabled
         this.isMultiple = isMultiple
+        this.isReorderable = isReorderable
         this.isSearchable = isSearchable
         this.getOptionLabelUsing = getOptionLabelUsing
         this.getOptionLabelsUsing = getOptionLabelsUsing
@@ -77,6 +80,9 @@ export class Select {
         this.loadingMessage = loadingMessage
         this.searchingMessage = searchingMessage
         this.noSearchResultsMessage = noSearchResultsMessage
+
+        // Tracks the latest initiated async search to invalidate stale results
+        this.activeSearchId = 0
         this.maxItems = maxItems
         this.maxItemsMessage = maxItemsMessage
         this.optionsLimit = optionsLimit
@@ -804,6 +810,32 @@ export class Select {
         })
 
         target.appendChild(badgesContainer)
+
+        if (this.isReorderable) {
+            badgesContainer.addEventListener('click', (event) => {
+                event.stopPropagation()
+            })
+
+            badgesContainer.addEventListener('mousedown', (event) => {
+                event.stopPropagation()
+            })
+
+            new Sortable(badgesContainer, {
+                animation: 150,
+                onEnd: () => {
+                    const newState = []
+
+                    badgesContainer
+                        .querySelectorAll('[data-value]')
+                        .forEach((badge) => {
+                            newState.push(badge.getAttribute('data-value'))
+                        })
+
+                    this.state = newState
+                    this.onStateChange(this.state)
+                },
+            })
+        }
     }
 
     // Helper method to get label for single selection
@@ -1304,17 +1336,19 @@ export class Select {
     }
 
     async openDropdown() {
-        // Make dropdown visible but with position fixed (or absolute in containers with .fi-absolute-positioning-context class) and opacity 0 for measurement
+        // Make dropdown visible but with position absolute by default, or fixed in containers with .fi-fixed-positioning-context class, and opacity 0 for measurement
         this.dropdown.style.display = 'block'
         this.dropdown.style.opacity = '0'
 
-        // Check if the select is inside a container that requires absolute positioning
-        const useAbsolutePositioning =
-            this.selectButton.closest('.fi-absolute-positioning-context') !==
-            null
-        this.dropdown.style.position = useAbsolutePositioning
-            ? 'absolute'
-            : 'fixed'
+        // Check if the select is inside a container that opts in to fixed positioning
+        const useFixedPositioning =
+            this.selectButton.closest('.fi-fixed-positioning-context') !==
+                null &&
+            this.selectButton.closest('.fi-absolute-positioning-context') ===
+                null
+        this.dropdown.style.position = useFixedPositioning
+            ? 'fixed'
+            : 'absolute'
         // Set width immediately to match the select button
         this.dropdown.style.width = `${this.selectButton.offsetWidth}px`
         this.selectButton.setAttribute('aria-expanded', 'true')
@@ -1342,6 +1376,18 @@ export class Select {
         // Make dropdown visible
         this.dropdown.style.opacity = '1'
 
+        // On every fresh open, clear any previous search query so reopening starts clean.
+        if (this.isSearchable && this.searchInput) {
+            this.searchInput.value = ''
+            this.searchQuery = ''
+
+            // If options are static, immediately reset to the unfiltered list.
+            if (!this.hasDynamicOptions) {
+                this.options = JSON.parse(JSON.stringify(this.originalOptions))
+                this.renderOptions()
+            }
+        }
+
         // If hasDynamicOptions is true, fetch options
         if (this.hasDynamicOptions && this.getOptionsUsing) {
             // Show loading message
@@ -1367,8 +1413,28 @@ export class Select {
                 // Populate the label repository with the fetched options
                 this.populateLabelRepositoryFromOptions(normalizedFetched)
 
-                // Render options
-                this.renderOptions()
+                // Render options or reapply existing search query if present
+                if (
+                    this.isSearchable &&
+                    this.searchInput &&
+                    ((this.searchInput.value &&
+                        this.searchInput.value.trim() !== '') ||
+                        (this.searchQuery && this.searchQuery.trim() !== ''))
+                ) {
+                    const query = (
+                        this.searchInput.value ||
+                        this.searchQuery ||
+                        ''
+                    )
+                        .trim()
+                        .toLowerCase()
+
+                    // Ensure any loading message is hidden before rendering
+                    this.hideLoadingState()
+                    this.filterOptions(query)
+                } else {
+                    this.renderOptions()
+                }
             } catch (error) {
                 console.error('Error fetching options:', error)
 
@@ -1382,13 +1448,9 @@ export class Select {
 
         // If searchable, focus the search input
         if (this.isSearchable && this.searchInput) {
-            this.searchInput.value = ''
+            // Preserve any existing query; do not reset during or after async load
             this.searchInput.focus()
-
-            // Always reset search query and options when reopening
-            this.searchQuery = ''
-            this.options = JSON.parse(JSON.stringify(this.originalOptions))
-            this.renderOptions()
+            // If a search query exists, options were already filtered; otherwise they were rendered above.
         } else {
             // Focus the first option or the selected option
             this.selectedIndex = -1
@@ -1442,15 +1504,17 @@ export class Select {
             middleware.push(flip()) // Flip to top if not enough space at bottom
         }
 
-        // Check if the select is inside a container that requires absolute positioning
-        const useAbsolutePositioning =
-            this.selectButton.closest('.fi-absolute-positioning-context') !==
-            null
+        // Check if the select is inside a container that opts in to fixed positioning
+        const useFixedPositioning =
+            this.selectButton.closest('.fi-fixed-positioning-context') !==
+                null &&
+            this.selectButton.closest('.fi-absolute-positioning-context') ===
+                null
 
         computePosition(this.selectButton, this.dropdown, {
             placement: placement,
             middleware: middleware,
-            strategy: useAbsolutePositioning ? 'absolute' : 'fixed',
+            strategy: useFixedPositioning ? 'fixed' : 'absolute',
         }).then(({ x, y }) => {
             Object.assign(this.dropdown.style, {
                 left: `${x}px`,
@@ -1463,6 +1527,19 @@ export class Select {
         this.dropdown.style.display = 'none'
         this.selectButton.setAttribute('aria-expanded', 'false')
         this.isOpen = false
+
+        // Cancel any pending debounced search
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout)
+            this.searchTimeout = null
+        }
+
+        // Invalidate any in-flight async searches and reset searching state
+        this.activeSearchId++
+        this.isSearching = false
+
+        // Remove any loading / no-results messages
+        this.hideLoadingState()
 
         // Remove resize listener
         if (this.resizeListener) {
@@ -1481,6 +1558,9 @@ export class Select {
         options.forEach((option) => {
             option.classList.remove('fi-selected')
         })
+
+        // Clear active descendant when closing
+        this.dropdown.removeAttribute('aria-activedescendant')
     }
 
     focusNextOption() {
@@ -1638,7 +1718,7 @@ export class Select {
     }
 
     handleSearch(event) {
-        const query = event.target.value.trim().toLowerCase()
+        const query = event.target.value.trim()
         this.searchQuery = query
 
         // Clear any existing timeout
@@ -1668,6 +1748,8 @@ export class Select {
             // Clear the timeout handle immediately to avoid stale truthy checks
             this.searchTimeout = null
 
+            // Increment the active search token to invalidate any in-flight previous searches
+            const searchId = ++this.activeSearchId
             this.isSearching = true
 
             try {
@@ -1676,6 +1758,11 @@ export class Select {
 
                 // Get search results from backend
                 const results = await this.getSearchResultsUsing(query)
+
+                // If this search is no longer the latest or the dropdown is closed, ignore the results
+                if (searchId !== this.activeSearchId || !this.isOpen) {
+                    return
+                }
 
                 // Normalize results to an array
                 const normalizedResults = Array.isArray(results)
@@ -1704,14 +1791,21 @@ export class Select {
                     this.showNoResultsMessage()
                 }
             } catch (error) {
-                console.error('Error fetching search results:', error)
+                // If this search is obsolete, silence errors to avoid noisy logs on cancellation
+                if (searchId === this.activeSearchId) {
+                    console.error('Error fetching search results:', error)
 
-                // Hide loading state and restore original options
-                this.hideLoadingState()
-                this.options = JSON.parse(JSON.stringify(this.originalOptions))
-                this.renderOptions()
+                    // Hide loading state and restore original options
+                    this.hideLoadingState()
+                    this.options = JSON.parse(
+                        JSON.stringify(this.originalOptions),
+                    )
+                    this.renderOptions()
+                }
             } finally {
-                this.isSearching = false
+                if (searchId === this.activeSearchId) {
+                    this.isSearching = false
+                }
             }
         }, this.searchDebounce)
     }
@@ -1763,6 +1857,8 @@ export class Select {
     filterOptions(query) {
         const searchInLabel = this.searchableOptionFields.includes('label')
         const searchInValue = this.searchableOptionFields.includes('value')
+
+        query = query.toLowerCase()
 
         const filteredOptions = []
 

@@ -8,6 +8,7 @@ use Carbon\CarbonInterface;
 use Closure;
 use Filament\Support\Components\Component;
 use Filament\Support\Contracts\HasLabel as LabelInterface;
+use Filament\Support\Services\RelationshipOrderer;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -321,8 +322,11 @@ class Group extends Component
             ]) ?? $query;
         }
 
-        if ($relationshipName = $this->getRelationshipName()) {
-            return $query->orderByPowerJoins("{$relationshipName}.{$this->getRelationshipAttribute()}", $direction); /** @phpstan-ignore method.notFound */
+        if (filled($relationshipName = $this->getRelationshipName())) {
+            return $query->orderBy(
+                app(RelationshipOrderer::class)->buildSubquery($query, $relationshipName, $this->getRelationshipAttribute()),
+                $direction
+            );
         }
 
         return $query->orderBy($this->getRelationshipAttribute(), $direction);
@@ -350,7 +354,7 @@ class Group extends Component
         return $query;
     }
 
-    public function scopeQueryByKey(EloquentBuilder $query, string $key): EloquentBuilder
+    public function scopeQueryByKey(EloquentBuilder $query, ?string $key): EloquentBuilder
     {
         $column = $this->getColumn();
 
@@ -369,7 +373,7 @@ class Group extends Component
             return $query->whereHas(
                 $relationshipName,
                 fn (EloquentBuilder $query) => $this->applyDefaultScopeToQuery($query, $this->getRelationshipAttribute(), $key),
-            );
+            )->when(blank($key), fn (EloquentBuilder $query) => $query->orWhereDoesntHave($relationshipName));
         }
 
         return $this->applyDefaultScopeToQuery($query, $column, $key);
@@ -393,6 +397,12 @@ class Group extends Component
         $relationship = null;
 
         foreach (explode('.', $name ?? $this->getRelationshipName()) as $nestedRelationshipName) {
+            if ($record->hasAttribute($nestedRelationshipName)) {
+                $relationship = null;
+
+                break;
+            }
+
             if (! $record->isRelation($nestedRelationshipName)) {
                 $relationship = null;
 
