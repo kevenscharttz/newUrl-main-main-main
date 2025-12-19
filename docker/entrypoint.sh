@@ -4,11 +4,16 @@ set -e
 # Mensagem util no log
 echo "[entrypoint] Iniciando container Laravel..."
 
-# Algumas operacoes utilitarias (nao falham o container se der erro)
+# Garantir diretorios de cache/sessoes/views existentes e permissoes corretas
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache || true
+chown -R www-data:www-data storage bootstrap/cache || true
+chmod -R 775 storage bootstrap/cache || true
+
+# Limpezas (nao falham o container se der erro)
 php artisan config:clear >/dev/null 2>&1 || true
-php artisan cache:clear >/dev/null 2>&1 || true
-php artisan route:clear >/dev/null 2>&1 || true
-php artisan view:clear >/dev/null 2>&1 || true
+php artisan cache:clear  >/dev/null 2>&1 || true
+php artisan route:clear  >/dev/null 2>&1 || true
+php artisan view:clear   >/dev/null 2>&1 || true
 
 # Link de storage (idempotente)
 php artisan storage:link >/dev/null 2>&1 || true
