@@ -9,6 +9,19 @@ mkdir -p storage/framework/cache storage/framework/sessions storage/framework/vi
 chown -R www-data:www-data storage bootstrap/cache || true
 chmod -R 775 storage bootstrap/cache || true
 
+# Gerar APP_KEY caso não exista
+if [ -z "${APP_KEY}" ]; then
+  echo "[entrypoint] Gerando APP_KEY..."
+  php artisan key:generate --force >/dev/null 2>&1 || true
+fi
+
+# Fallback opcional para sqlite APENAS se nada estiver configurado
+if [ -z "${DB_CONNECTION}" ] || [ "${DB_CONNECTION}" = "sqlite" ]; then
+  mkdir -p database
+  touch database/database.sqlite
+  export DB_CONNECTION=sqlite
+fi
+
 # Limpezas (nao falham o container se der erro)
 php artisan config:clear >/dev/null 2>&1 || true
 php artisan cache:clear  >/dev/null 2>&1 || true
