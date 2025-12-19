@@ -15,11 +15,14 @@ if [ -z "${APP_KEY}" ]; then
   php artisan key:generate --force >/dev/null 2>&1 || true
 fi
 
-# Fallback opcional para sqlite APENAS se nada estiver configurado
-if [ -z "${DB_CONNECTION}" ] || [ "${DB_CONNECTION}" = "sqlite" ]; then
-  mkdir -p database
-  touch database/database.sqlite
-  export DB_CONNECTION=sqlite
+# Fallback opcional para sqlite APENAS se explicitamente permitido
+if [ "${ALLOW_SQLITE_FALLBACK}" = "true" ]; then
+  if [ -z "${DB_CONNECTION}" ] || [ "${DB_CONNECTION}" = "sqlite" ]; then
+    echo "[entrypoint] ALLOW_SQLITE_FALLBACK=true: usando SQLite local."
+    mkdir -p database
+    touch database/database.sqlite
+    export DB_CONNECTION=sqlite
+  fi
 fi
 
 # Limpezas (nao falham o container se der erro)
