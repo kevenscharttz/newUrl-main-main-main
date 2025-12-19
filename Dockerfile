@@ -1,41 +1,60 @@
-FROM php:8.2-cli
+FROM php:8.2-cli-bookworm
 
-# Instalar dependências do sistema
+# 1) Sistema e libs
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libpq-dev \
-    libzip-dev \
-    libicu-dev
+        git \
+        curl \
+        libpng-dev \
+        libonig-dev \
+        libxml2-dev \
+        zip \
+        unzip \
+        libpq-dev \
+        libzip-dev \
+        libicu-dev \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar extensões do PHP necessárias para Laravel e Postgres
+# 2) Extensões PHP necessárias (inclui Postgres)
 RUN docker-php-ext-configure intl \
-    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip intl
+    && docker-php-ext-install -j$(nproc) \
+             pdo_pgsql bcmath mbstring intl zip gd
 
-# Instalar Node.js (para compilar o front-end)
+# 3) Node.js 20 para build do front-end
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+    && apt-get update && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
-# Obter o Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# 4) Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Definir diretório de trabalho
+# 5) Diretório de trabalho
 WORKDIR /var/www/html
 
-# Copiar arquivos do projeto
+# 6) Copiar manifests primeiro (melhor cache)
+COPY composer.json composer.lock* package.json package-lock.json* ./
+
+# 7) Instalar dependências
+RUN composer install --no-dev --prefer-dist --no-scripts --optimize-autoloader \
+    && npm ci || npm install
+
+# 8) Copiar restante do projeto
 COPY . .
 
-# Instalar dependências do projeto
-RUN composer install --no-dev --optimize-autoloader
-RUN npm install && npm run build
+# 9) Build dos assets e limpeza
+RUN npm run build \
+    && rm -rf node_modules
 
-# Expor a porta que o Render usa
-EXPOSE 10000
+# 10) Permissões para cache/logs
+RUN mkdir -p storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-# Comando para iniciar o servidor
-CMD php artisan serve --host=0.0.0.0 --port=10000
+# 11) Copiar entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# 12) Porta dinâmica (Railway usa $PORT)
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
