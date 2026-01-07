@@ -22,8 +22,17 @@ ensure_node() {
 	TMPDIR="${XDG_CACHE_HOME:-/tmp}/node-portable"
 	mkdir -p "$TMPDIR"
 	if [ ! -d "$TMPDIR/${ARCHIVE}" ]; then
-		curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${ARCHIVE}.tar.gz" -o "$TMPDIR/${ARCHIVE}.tar.gz"
-		tar -xzf "$TMPDIR/${ARCHIVE}.tar.gz" -C "$TMPDIR"
+		URL="https://nodejs.org/dist/${NODE_VERSION}/${ARCHIVE}.tar.gz"
+		OUT="$TMPDIR/${ARCHIVE}.tar.gz"
+		if command -v curl >/dev/null 2>&1; then
+			curl -fsSL "$URL" -o "$OUT"
+		elif command -v wget >/dev/null 2>&1; then
+			wget -q "$URL" -O "$OUT"
+		else
+			echo "[render] ERROR: neither curl nor wget available to fetch Node.js" >&2
+			return 1
+		fi
+		tar -xzf "$OUT" -C "$TMPDIR"
 	fi
 	export PATH="$TMPDIR/${ARCHIVE}/bin:$PATH"
 	command -v npm >/dev/null 2>&1
