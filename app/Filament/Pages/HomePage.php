@@ -12,6 +12,12 @@ class HomePage extends Page
     protected string $view = 'filament.pages.home';
     protected static ?int $navigationSort = 0;
 
+    public static function canAccess(array $parameters = []): bool
+    {
+        // Permite acesso a qualquer usuário autenticado
+        return auth()->check();
+    }
+
     public function getViewData(): array
     {
         $now = now();

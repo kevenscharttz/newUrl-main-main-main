@@ -27,6 +27,7 @@ php artisan config:clear >/dev/null 2>&1 || true
 php artisan cache:clear  >/dev/null 2>&1 || true
 php artisan route:clear  >/dev/null 2>&1 || true
 php artisan view:clear   >/dev/null 2>&1 || true
+php artisan permission:cache-reset >/dev/null 2>&1 || true
 
 # Link de storage (idempotente)
 php artisan storage:link >/dev/null 2>&1 || true

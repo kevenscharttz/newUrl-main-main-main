@@ -64,7 +64,8 @@ return [
 
     'super_admin' => [
         'enabled' => true,
-        'name' => 'super_admin',
+        // Alinhar com a role do app (com hífen)
+        'name' => 'super-admin',
         'define_via_gate' => false,
         'intercept_gate' => 'before',
     ],
@@ -81,7 +82,8 @@ return [
     */
 
     'panel_user' => [
-        'enabled' => true,
+        // Desativar exigência de role panel_user para acessar o painel
+        'enabled' => false,
         'name' => 'panel_user',
     ],
 
@@ -192,6 +194,7 @@ return [
         'prefix' => 'view',
         'exclude' => [
             \Filament\Pages\Dashboard::class,
+            \App\Filament\Pages\HomePage::class,
         ],
     ],
 
