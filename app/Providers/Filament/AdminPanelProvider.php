@@ -73,7 +73,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                EnsureCanViewDashboard::class,
+                // EnsureCanViewDashboard::class, // disabled to avoid unintended 403s on guest routes like /painel/login
             ])
             ->plugins([
                 FilamentShieldPlugin::make(),
