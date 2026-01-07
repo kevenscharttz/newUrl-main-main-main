@@ -38,6 +38,11 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
   php artisan migrate --force || echo "[entrypoint] Migrations falharam (provavel DB indisponivel). Continuando..."
 fi
 
+# Seeders essenciais (idempotentes) sempre
+echo "[entrypoint] Seeding baseline: roles & super-admin"
+php artisan db:seed --class=PlatformRolesAndPermissionsSeeder --force || echo "[entrypoint] PlatformRolesAndPermissionsSeeder falhou. Continuando..."
+php artisan db:seed --class=DockerSuperAdminSeeder --force || echo "[entrypoint] DockerSuperAdminSeeder falhou. Continuando..."
+
 # Rodar seeders opcionalmente
 if [ "${RUN_SEEDS:-false}" = "true" ]; then
   echo "[entrypoint] Executando seeders..."
