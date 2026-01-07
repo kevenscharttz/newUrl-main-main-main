@@ -10,6 +10,8 @@ use App\Filament\Resources\Organizations\Schemas\OrganizationForm;
 use App\Filament\Resources\Organizations\Schemas\OrganizationInfolist;
 use App\Filament\Resources\Organizations\Tables\OrganizationsTable;
 use App\Models\Organization;
+use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Auth;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -56,5 +58,22 @@ class OrganizationResource extends Resource
             'view' => ViewOrganization::route('/{record}'),
             'edit' => EditOrganization::route('/{record}/edit'),
         ];
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        $user = Filament::auth()?->user() ?? request()->user() ?? Auth::user();
+
+        if (! $user) {
+            return false;
+        }
+
+        // Super-admin sempre pode acessar
+        if (method_exists($user, 'hasRole') && ($user->hasRole('super-admin') || $user->hasRole('super_admin'))) {
+            return true;
+        }
+
+        // Fallback para policy quando existir
+        return $user->can('viewAny', Organization::class);
     }
 }

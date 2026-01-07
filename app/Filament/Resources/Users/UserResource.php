@@ -10,6 +10,8 @@ use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Schemas\UserInfolist;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
+use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Auth;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -55,5 +57,22 @@ class UserResource extends Resource
             'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        $user = Filament::auth()?->user() ?? request()->user() ?? Auth::user();
+
+        if (! $user) {
+            return false;
+        }
+
+        // Super-admin sempre pode acessar
+        if (method_exists($user, 'hasRole') && ($user->hasRole('super-admin') || $user->hasRole('super_admin'))) {
+            return true;
+        }
+
+        // Fallback para policy quando existir
+        return $user->can('viewAny', User::class);
     }
 }

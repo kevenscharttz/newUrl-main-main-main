@@ -66,7 +66,8 @@ return [
         'enabled' => true,
         // Alinhar com a role do app (com hífen)
         'name' => 'super-admin',
-        'define_via_gate' => false,
+        // Habilita bypass total via Gate::before para a role super-admin
+        'define_via_gate' => true,
         'intercept_gate' => 'before',
     ],
 
