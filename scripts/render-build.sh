@@ -16,15 +16,15 @@ ensure_node() {
 		return 0
 	fi
 
-	echo "[render] npm not found — fetching portable Node.js (v20.x)"
+	echo "[render] npm not found — fetching portable Node.js (v20.x, .tar.gz)"
 	NODE_VERSION="v20.18.0"
 	ARCHIVE="node-${NODE_VERSION}-linux-x64"
 	TMPDIR="${XDG_CACHE_HOME:-/tmp}/node-portable"
 	mkdir -p "$TMPDIR"
 
 	if [ ! -d "$TMPDIR/${ARCHIVE}" ]; then
-		curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${ARCHIVE}.tar.xz" -o "$TMPDIR/${ARCHIVE}.tar.xz"
-		tar -xJf "$TMPDIR/${ARCHIVE}.tar.xz" -C "$TMPDIR"
+		curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/${ARCHIVE}.tar.gz" -o "$TMPDIR/${ARCHIVE}.tar.gz"
+		tar -xzf "$TMPDIR/${ARCHIVE}.tar.gz" -C "$TMPDIR"
 	fi
 
 	export PATH="$TMPDIR/${ARCHIVE}/bin:$PATH"
