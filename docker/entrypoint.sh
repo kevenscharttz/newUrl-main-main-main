@@ -42,10 +42,9 @@ fi
 if [ "${RUN_SEEDS:-false}" = "true" ]; then
   echo "[entrypoint] Executando seeders..."
   if [ -n "${SEED_CLASSES:-}" ]; then
-    # Permite lista separada por vírgula: SEED_CLASSES="PlatformRolesAndPermissionsSeeder,DockerSuperAdminSeeder,OrganizationDataSeeder"
-    IFS=',' read -r -a SEEDS <<< "${SEED_CLASSES}"
-    for s in "${SEEDS[@]}"; do
-      s_trim=$(echo "$s" | xargs)
+    # Lista separada por vírgula: SEED_CLASSES="A,B,C" (compatível com /bin/sh)
+    for s in $(printf "%s" "${SEED_CLASSES}" | tr ',' ' '); do
+      s_trim=$(printf "%s" "$s" | xargs)
       if [ -n "$s_trim" ]; then
         echo "[entrypoint] Seeding class: $s_trim"
         php artisan db:seed --class="$s_trim" --force || echo "[entrypoint] Seeder $s_trim falhou. Continuando..."
