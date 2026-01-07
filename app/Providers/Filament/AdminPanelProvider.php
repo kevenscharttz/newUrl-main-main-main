@@ -93,3 +93,5 @@ class AdminPanelProvider extends PanelProvider
 
         return $panel;
     }
+
+}
