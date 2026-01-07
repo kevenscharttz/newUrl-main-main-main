@@ -30,6 +30,8 @@ class AdminPanelProvider extends PanelProvider
             // Alterado para 'painel' para evitar URL duplicada /home/home
             ->id('painel')
             ->path('painel')
+            // Define a rota inicial do painel explicitamente para evitar redirecionar ao Dashboard padrão
+            ->homeUrl('/painel/home')
             ->login()
             // Expand content area to full width (user request): can rollback by removing maxContentWidth()
             ->maxContentWidth('full')
