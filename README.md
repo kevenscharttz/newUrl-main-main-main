@@ -1,5 +1,35 @@
 # NewUrl - Configuração do Ambiente Docker
 
+## Deploy no Render (Docker ou Nativo)
+
+Você pode publicar este projeto no Render de duas formas. A recomendada é via Docker (usa nosso Dockerfile e já compila os assets). Como alternativa, dá para usar o runtime nativo do Render e os scripts em `scripts/render-*.sh`.
+
+### Opção A — Docker (recomendada)
+1. No painel do Render, crie um novo Web Service a partir deste repositório e escolha “Docker” (o Render detecta o `Dockerfile`).
+2. Configure as variáveis de ambiente essenciais:
+   - `APP_ENV=production`
+   - `APP_DEBUG=false`
+   - `APP_URL=https://<SEU_SERVICO>.onrender.com` (ou seu domínio)
+   - `APP_KEY` — gere localmente com `php artisan key:generate --show` e cole no Render
+   - `SESSION_DRIVER=file`
+   - `CACHE_STORE=file`
+   - `QUEUE_CONNECTION=sync`
+   - Banco de dados (opcional):
+     - Se usar PostgreSQL do Render: `DB_CONNECTION=pgsql` e defina `DATABASE_URL` (o Render fornece automaticamente). Também defina `DB_SSLMODE=require`.
+     - Se não configurar DB, o container cai para `sqlite` efêmero; serve para testes, mas perde dados a cada deploy.
+   - (Opcional) usuário admin inicial: `DOCKER_ADMIN_EMAIL`, `DOCKER_ADMIN_PASSWORD`.
+3. Deploy. O Dockerfile já compila os assets com Vite e inicia o servidor em `$PORT`.
+
+### Opção B — Runtime nativo do Render
+1. Crie um Web Service (runtime: PHP) e configure:
+   - Build Command: `bash scripts/render-build.sh`
+   - Start Command: `bash scripts/render-start.sh`
+2. Mesmas variáveis de ambiente da opção Docker (lista acima).
+3. Deploy. Os scripts irão instalar dependências, compilar assets, criar o link de `storage`, otimizar e iniciar o servidor.
+
+> Importante: por padrão este projeto usa `SESSION_DRIVER=database` no `.env.example`. Em produção, defina `SESSION_DRIVER=file` (e também `CACHE_STORE=file`, `QUEUE_CONNECTION=sync`) a menos que você configure e migre o banco para suportar sessão/queue/cache em tabela.
+
+
 ## Pré-requisitos por Sistema Operacional
 
 ### macOS

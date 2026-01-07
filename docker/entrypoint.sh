@@ -9,7 +9,13 @@ mkdir -p storage/framework/cache storage/framework/sessions storage/framework/vi
 chown -R www-data:www-data storage bootstrap/cache || true
 chmod -R 775 storage bootstrap/cache || true
 
-# Gerar APP_KEY caso não exista
+# Definir padrões seguros para produção quando variáveis não estiverem definidas
+# Evita quebra de sessão/CSRF quando o banco não está configurado
+export SESSION_DRIVER="${SESSION_DRIVER:-file}"
+export CACHE_STORE="${CACHE_STORE:-file}"
+export QUEUE_CONNECTION="${QUEUE_CONNECTION:-sync}"
+
+# Gerar APP_KEY caso não exista (ideal é definir via env no provedor)
 if [ -z "${APP_KEY}" ]; then
   echo "[entrypoint] Gerando APP_KEY..."
   php artisan key:generate --force >/dev/null 2>&1 || true
