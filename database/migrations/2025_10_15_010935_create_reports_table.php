@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('url');
             $table->string('visibility')->default('public'); // public ou private
             $table->text('description')->nullable();
+            // Em PostgreSQL, prefira jsonb. A migração 2026_01_07_000030 converte para jsonb quando necessário.
             $table->json('tags')->nullable();
             $table->json('settings')->nullable();
             $table->foreignId('scope_user_id')->nullable()->constrained('users')->onDelete('cascade');

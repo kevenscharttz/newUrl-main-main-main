@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::table('organizations', function (Blueprint $table) {
             $table->string('logo_url')->nullable()->after('single_dashboard');
             $table->string('logo_alt_text')->nullable()->after('logo_url');
+            // Em PostgreSQL, prefira jsonb. A migração 2026_01_07_000030 converte para jsonb quando necessário.
             $table->json('logo_settings')->nullable()->after('logo_alt_text');
         });
     }

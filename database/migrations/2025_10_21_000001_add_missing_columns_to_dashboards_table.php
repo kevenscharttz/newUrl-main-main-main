@@ -12,6 +12,7 @@ return new class extends Migration
             $table->string('type')->default('dashboard')->after('title');
             $table->string('platform_custom')->nullable()->after('platform');
             $table->text('description')->nullable()->after('type');
+            // Em PostgreSQL, prefira jsonb. A migração 2026_01_07_000030 converte para jsonb quando necessário.
             $table->json('settings')->nullable()->after('tags');
         });
     }
