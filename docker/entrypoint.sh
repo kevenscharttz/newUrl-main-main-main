@@ -38,6 +38,24 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
   php artisan migrate --force || echo "[entrypoint] Migrations falharam (provavel DB indisponivel). Continuando..."
 fi
 
+# Rodar seeders opcionalmente
+if [ "${RUN_SEEDS:-false}" = "true" ]; then
+  echo "[entrypoint] Executando seeders..."
+  if [ -n "${SEED_CLASSES:-}" ]; then
+    # Permite lista separada por vírgula: SEED_CLASSES="PlatformRolesAndPermissionsSeeder,DockerSuperAdminSeeder,OrganizationDataSeeder"
+    IFS=',' read -r -a SEEDS <<< "${SEED_CLASSES}"
+    for s in "${SEEDS[@]}"; do
+      s_trim=$(echo "$s" | xargs)
+      if [ -n "$s_trim" ]; then
+        echo "[entrypoint] Seeding class: $s_trim"
+        php artisan db:seed --class="$s_trim" --force || echo "[entrypoint] Seeder $s_trim falhou. Continuando..."
+      fi
+    done
+  else
+    php artisan db:seed --force || echo "[entrypoint] db:seed falhou. Continuando..."
+  fi
+fi
+
 # Otimizacoes
 php artisan optimize || true
 
