@@ -62,6 +62,7 @@ return array(
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
     'App\\Providers\\AuthServiceProvider' => $baseDir . '/app/Providers/AuthServiceProvider.php',
     'App\\Providers\\Filament\\AdminPanelProvider' => $baseDir . '/app/Providers/Filament/AdminPanelProvider.php',
+    'App\\Providers\\Filament\\PainelPanelProvider' => $baseDir . '/app/Providers/Filament/PainelPanelProvider.php',
     'App\\Support\\Logos' => $baseDir . '/app/Support/Logos.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
     'BezhanSalleh\\FilamentShield\\Commands\\Concerns\\CanGeneratePolicy' => $vendorDir . '/bezhansalleh/filament-shield/src/Commands/Concerns/CanGeneratePolicy.php',

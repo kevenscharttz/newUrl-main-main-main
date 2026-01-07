@@ -810,6 +810,7 @@ class ComposerStaticInitaa7873cd5d15f6140efb985c4ea9d50d
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'App\\Providers\\AuthServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AuthServiceProvider.php',
         'App\\Providers\\Filament\\AdminPanelProvider' => __DIR__ . '/../..' . '/app/Providers/Filament/AdminPanelProvider.php',
+        'App\\Providers\\Filament\\PainelPanelProvider' => __DIR__ . '/../..' . '/app/Providers/Filament/PainelPanelProvider.php',
         'App\\Support\\Logos' => __DIR__ . '/../..' . '/app/Support/Logos.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'BezhanSalleh\\FilamentShield\\Commands\\Concerns\\CanGeneratePolicy' => __DIR__ . '/..' . '/bezhansalleh/filament-shield/src/Commands/Concerns/CanGeneratePolicy.php',
