@@ -25,7 +25,8 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        // Build the base panel configuration
+        $panel = $panel
             ->default()
             // Alterado para 'painel' para evitar URL duplicada /home/home
             ->id('painel')
@@ -64,7 +65,6 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\DashboardsCountWidget::class,
                 \App\Filament\Widgets\RecentDashboardsWidget::class,
             ])
-            ->viteTheme('resources/css/filament/admin/theme.css')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -83,5 +83,13 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+
+        // Load custom Filament theme via Vite only if the manifest exists.
+        // This prevents "manifest not found" issues in environments where assets weren't built yet
+        // and ensures Filament still loads its default vendor styles.
+        if (file_exists(public_path('build/manifest.json'))){
+            $panel = $panel->viteTheme('resources/css/filament/admin/theme.css');
+        }
+
+        return $panel;
     }
-}
